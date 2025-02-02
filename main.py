@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db.database import init_db
-from api.routers import user_router, task_router
+from api.routers import user_router, task_router, project_router
 from decouple import config
 from contextlib import asynccontextmanager
 
@@ -33,7 +33,7 @@ app.add_middleware(
 
 # Inclusão de routers
 app.include_router(user_router, prefix="/users", tags=["Users"])
-#app.include_router(project_router, prefix="/projects", tags=["Projects"])
+app.include_router(project_router, prefix="/projects", tags=["Projects"])
 app.include_router(task_router, prefix="/tasks", tags=["Tasks"])
 
 # Apenas para execução local
