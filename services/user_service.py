@@ -1,6 +1,8 @@
 from schemas.user import UserCreate
 from utils.security import get_password_hash
 from fastapi import HTTPException
+from bson.objectid import ObjectId
+from utils.functions import serialize_document
 
 class UserService:
     @staticmethod
@@ -13,10 +15,14 @@ class UserService:
             "hashed_password": hashed_password,
         }
 
-        existing_user = await db["users"].find_one({"email": user_data.email})
+        existing_user = await db.get_collection("user").find_one({"email": user_data.email})
         if existing_user:
             raise HTTPException(status_code=400, detail="Email is already in use.")
+        
+        await db.get_collection("user").insert_one(new_user)
 
-        result = await db["users"].insert_one(new_user)
-        new_user["name"] = result.inserted_id 
         return new_user
+    
+    async def get_user_by_id(id, db):
+        result = await db.get_collection("user").find_one({"_id": ObjectId(id)})
+        return serialize_document(result)

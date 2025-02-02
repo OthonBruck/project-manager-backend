@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db.database import init_db
-from api.routers import user_router, project_router, task_router
+from api.routers import user_router
 from decouple import config
 from contextlib import asynccontextmanager
 
 
 # Eventos de inicialização e encerramento
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     print("Starting application...")
-    await init_db()
+    init_db()
     yield
     print("Ending application...")
     

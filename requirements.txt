@@ -1,4 +1,4 @@
 fastapi[standard]
 python-decouple
-pymongo[srv]
+motor
 passlib[bcrypt]
