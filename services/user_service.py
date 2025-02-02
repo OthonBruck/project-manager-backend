@@ -22,7 +22,9 @@ class UserService:
         await db.get_collection("user").insert_one(new_user)
 
         return new_user
-    
+
     async def get_user_by_id(id, db):
         result = await db.get_collection("user").find_one({"_id": ObjectId(id)})
+        if not result:
+            raise HTTPException(status_code=400, detail="User does not exist.")
         return serialize_document(result)
