@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from schemas.user import UserCreate, UserResponseCreate, UserResponseGet
+from schemas.user import UserCreate, UserResponseCreate, UserResponseGet, UserLogin, UserResponseLogin
 from schemas.api_response import ApiResponse
 from services.user_service import UserService
 from db.database import get_database
@@ -15,3 +15,8 @@ async def register_user(user: UserCreate, db=Depends(get_database)):
 async def get_user(id, db=Depends(get_database)):
     user_response = await UserService.get_user_by_id(id, db)
     return {"message": "Usuário encontrado com sucesso", "data": user_response}
+
+@router.post("/login", response_model=ApiResponse[UserResponseLogin], status_code=status.HTTP_200_OK)
+async def login(user: UserLogin, db=Depends(get_database)):
+    token = await UserService.authenticate_user(user, db)
+    return {"message": "Usuário autenticado com sucesso", "data": token}
