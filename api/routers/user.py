@@ -3,6 +3,7 @@ from schemas.user import UserCreate, UserResponseCreate, UserResponseGet, UserLo
 from schemas.api_response import ApiResponse
 from services.user_service import UserService
 from db.database import get_database
+from utils.security import get_current_user
 
 router = APIRouter()
 
@@ -12,7 +13,7 @@ async def register_user(user: UserCreate, db=Depends(get_database)):
     return {"message": "Usuário criado com sucesso", "data": user_response}
 
 @router.get("/{id}", response_model=ApiResponse[UserResponseGet], status_code=status.HTTP_200_OK)
-async def get_user(id, db=Depends(get_database)):
+async def get_user(id, db=Depends(get_database), current_user=Depends(get_current_user)):
     user_response = await UserService.get_user_by_id(id, db)
     return {"message": "Usuário encontrado com sucesso", "data": user_response}
 
