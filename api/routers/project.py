@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.post("/", response_model=ApiResponse[ProjectResponseCreate], status_code=status.HTTP_201_CREATED)
 async def register_project(project: ProjectCreate, db=Depends(get_database), current_user=Depends(get_current_user)):
-    project_response = await ProjectService.create_project(project, db)
+    project_response = await ProjectService.create_project(project, db, current_user)
     return {"message": "Projeto criado com sucesso", "data": project_response}
 
 @router.get("/{id}", response_model=ApiResponse[ProjectResponseGet], status_code=status.HTTP_200_OK)

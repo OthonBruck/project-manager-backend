@@ -2,13 +2,14 @@ from schemas.project import ProjectCreate
 from fastapi import HTTPException
 from bson.objectid import ObjectId
 from utils.functions import serialize_document
-
 class ProjectService:
     @staticmethod
-    async def create_project(project_data: ProjectCreate, db):
+    async def create_project(project_data: ProjectCreate, db, current_user):
         new_project = {
             "title": project_data.title,
             "description": project_data.description,
+            "owner": current_user,
+            "members": []
         }
         await db.get_collection("project").insert_one(new_project)
 

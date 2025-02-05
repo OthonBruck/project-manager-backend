@@ -44,6 +44,6 @@ class UserService:
         if not user or not verify_password(userLogin.password, user.get("hashed_password")):
             raise HTTPException(status_code=401, detail="Invalid credentials.")
         
-        token = create_access_token({"sub": user.get("email")})
+        token = create_access_token({"sub": str(user.get("_id"))})
         return {'token': token}
     

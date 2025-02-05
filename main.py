@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db.database import init_db
-from api.routers import user_router, task_router, project_router
+from api.routers import user_router, task_router, project_router, websocket_router
 from decouple import config
 from contextlib import asynccontextmanager
 
@@ -35,6 +35,7 @@ app.add_middleware(
 app.include_router(user_router, prefix="/users", tags=["Users"])
 app.include_router(project_router, prefix="/projects", tags=["Projects"])
 app.include_router(task_router, prefix="/tasks", tags=["Tasks"])
+app.include_router(websocket_router, prefix="/websocket", tags=["WebSocket"])
 
 # Apenas para execução local
 if __name__ == "__main__":
