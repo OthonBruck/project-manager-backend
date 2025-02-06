@@ -19,3 +19,6 @@ class ProjectResponseGet(BaseModel):
 
 class ProjectResponseCreate(BaseModel):
     title: str
+
+class ProjectAddMember(BaseModel):
+    user_id: PyObjectId

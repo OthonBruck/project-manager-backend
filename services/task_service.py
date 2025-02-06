@@ -4,18 +4,20 @@ from bson.objectid import ObjectId
 from utils.functions import serialize_document
 
 class TaskService:
-    @staticmethod
-    async def create_task(task_data: TaskCreate, db):
+    def __init__(self, db):
+        self.db = db
+    
+    async def create_task(self, task_data: TaskCreate):
         new_task = {
             "title": task_data.title,
             "description": task_data.description,
         }
-        await db.get_collection("task").insert_one(new_task)
+        await self.db.get_collection("task").insert_one(new_task)
 
         return new_task
 
-    async def get_task_by_id(id, db):
-        result = await db.get_collection("task").find_one({"_id": ObjectId(id)})
+    async def get_task_by_id(self, id):
+        result = await self.db.get_collection("task").find_one({"_id": ObjectId(id)})
         if not result:
             raise HTTPException(status_code=400, detail="Task does not exist.")
         return serialize_document(result)

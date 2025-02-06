@@ -15,8 +15,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return jwt.encode(to_encode, config("SECRET_KEY"), algorithm=config("ALGORITHM"))
 
 class UserService:
-    @staticmethod
-    async def create_user(user_data: UserCreate, db):
+    def __init__(self, db):
+        self.db = db
+    
+    async def create_user(self, user_data: UserCreate):
 
         hashed_password = get_password_hash(user_data.password)
         new_user = {
@@ -25,22 +27,22 @@ class UserService:
             "hashed_password": hashed_password,
         }
 
-        existing_user = await db.get_collection("user").find_one({"email": user_data.email})
+        existing_user = await self.db.get_collection("user").find_one({"email": user_data.email})
         if existing_user:
             raise HTTPException(status_code=400, detail="Email is already in use.")
         
-        await db.get_collection("user").insert_one(new_user)
+        await self.db.get_collection("user").insert_one(new_user)
 
         return new_user
 
-    async def get_user_by_id(id, db):
-        result = await db.get_collection("user").find_one({"_id": ObjectId(id)})
+    async def get_user_by_id(self, id):
+        result = await self.db.get_collection("user").find_one({"_id": ObjectId(id)})
         if not result:
             raise HTTPException(status_code=400, detail="User does not exist.")
         return serialize_document(result)
     
-    async def authenticate_user(userLogin: UserLogin, db):
-        user = await db.get_collection("user").find_one({"email": userLogin.email})
+    async def authenticate_user(self, userLogin: UserLogin):
+        user = await self.db.get_collection("user").find_one({"email": userLogin.email})
         if not user or not verify_password(userLogin.password, user.get("hashed_password")):
             raise HTTPException(status_code=401, detail="Invalid credentials.")
         

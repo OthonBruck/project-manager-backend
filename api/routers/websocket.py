@@ -1,5 +1,4 @@
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter
-from typing import List
 from services.websocket_service import connect_user, disconnect_user
 
 router = APIRouter()
