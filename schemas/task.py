@@ -1,5 +1,6 @@
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import core_schema
+from typing import Optional
 
 class PyObjectId(str):
     @classmethod
@@ -19,3 +20,7 @@ class TaskResponseGet(BaseModel):
 
 class TaskResponseCreate(BaseModel):
     title: str
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None

@@ -19,3 +19,5 @@ def get_service(service_class: Type[T]) -> Callable:
     def _get_service(db=Depends(get_database)) -> T:
         return service_class(db)
     return _get_service
+
+#TODO: Create functions to handle current_user

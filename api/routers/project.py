@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from schemas.project import ProjectCreate, ProjectResponseCreate, ProjectResponseGet, ProjectAddMember
 from schemas.api_response import ApiResponse
 from services.project_service import ProjectService
@@ -19,6 +19,6 @@ async def get_project(id, service=Depends(get_service(ProjectService)), current_
     return {"message": "Projeto encontrado com sucesso", "data": project_response}
 
 @router.patch("/{project_id}/members", response_model=ApiResponse, status_code=status.HTTP_200_OK)
-async def add_member(project_id, member: ProjectAddMember, service=Depends(get_service(ProjectService)), notification_service=Depends(get_service(NotificationService)),current_user=Depends(get_current_user)):
-    await service.add_member_to_project(project_id, member, notification_service,current_user)
+async def add_member(project_id, member: ProjectAddMember, background_tasks: BackgroundTasks, service=Depends(get_service(ProjectService)), notification_service=Depends(get_service(NotificationService)), current_user=Depends(get_current_user)):
+    await service.add_member_to_project(project_id, member, notification_service, current_user, background_tasks)
     return {"message": "Usuário autenticado com sucesso"}

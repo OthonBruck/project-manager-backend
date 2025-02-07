@@ -18,7 +18,7 @@ async def get_notifications(user_id: str, service=Depends(get_service(Notificati
     notifications = await service.get_notifications(user_id)
     return {"message": "Notificações encontradas com sucesso", "data": notifications}
 
-@router.put("/{notification_id}/read")
+@router.patch("/{notification_id}/read")
 async def mark_as_read(notification_id: str, service=Depends(get_service(NotificationService))):
     await service.mark_as_read(ObjectId(notification_id))
     return {"message": "Notificação marcada como lida"}

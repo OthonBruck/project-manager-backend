@@ -1,5 +1,6 @@
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import core_schema
+from typing import List
 
 class PyObjectId(str):
     @classmethod
@@ -21,4 +22,4 @@ class ProjectResponseCreate(BaseModel):
     title: str
 
 class ProjectAddMember(BaseModel):
-    user_id: PyObjectId
+    users_id: List[PyObjectId]

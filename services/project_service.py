@@ -25,23 +25,29 @@ class ProjectService:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         return serialize_document(result)
     
-    async def add_member_to_project(self, project_id, member, notification_service, current_user):
+    async def add_member_to_project(self, project_id, member, notification_service, current_user, background_tasks):
         project = await self.db.find_one({"_id": ObjectId(project_id)})
         if not project:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         
-        if member in project["members"]:
+        new_members = set(member.users_id)
+        old_members = set(project.get("members", []))
+
+        duplicates = old_members.intersection(new_members)
+        if duplicates:
             raise HTTPException(status_code=400, detail="User is already a member")
         
-        await self.db.update_one({"_id": ObjectId(project_id)}, {"$push": {"members": member.user_id}})
+        await self.db.update_one({"_id": ObjectId(project_id)}, {"$push": {"members": {"$each": member.users_id}}})
 
         message = {
-            "type": "added_member",
+            "type": "project-invite",
             "message": f"Você foi adicionado no projeto: {project.get('title')}",
             "project_id": project_id
         }
-        await notification_service.create_notification(member.user_id, f"Você foi adicionado no projeto: {project.get('title')}", "project_invite")
+        
+        for user_id in member.users_id:
+            background_tasks.add_task(notification_service.create_notification, user_id, f"Você foi adicionado no projeto: {project.get('title')}", message.get('type'))
 
-        await send_notification(message, [member.user_id])
+        background_tasks.add_task(send_notification, message, member.users_id)
 
         return {"message": "User added to project"}
