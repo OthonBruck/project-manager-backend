@@ -52,3 +52,11 @@ class ProjectService:
         background_tasks.add_task(send_notification, message, members.get('users_id', []))
 
         return {"message": "User added to project"}
+    
+    async def delete_project(self, project_id, current_user):
+        project = await check_permission(project_id, ["admin"], current_user, db=self.db)
+        if not project:
+            raise HTTPException(status_code=400, detail="Project does not exist.")
+        
+        await self.db.delete_one({"_id": ObjectId(project_id)})
+        return True
