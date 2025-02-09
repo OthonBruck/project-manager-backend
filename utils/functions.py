@@ -25,9 +25,9 @@ async def check_permission(
     project_id: str,
     required_roles: List[str],
     current_user: dict,
-    db
+    db=get_database()
 ):
-    project = await db.find_one({"_id": ObjectId(project_id)})
+    project = await db.get_collection("project").find_one({"_id": ObjectId(project_id)})
     if not project:
         raise HTTPException(status_code=404, detail="Projeto não encontrado")
     user_role = next(

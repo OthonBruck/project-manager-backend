@@ -9,18 +9,21 @@ router = APIRouter()
 
 @router.post("/", response_model=ApiResponse[TaskResponseCreate], status_code=status.HTTP_201_CREATED)
 async def register_task(task: TaskCreate, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
-    task_response = await service.create_task(task)
+    task_response = await service.create_task(task, current_user)
     return {"message": "Tarefa criada com sucesso", "data": task_response}
 
-@router.get("/{id}", response_model=ApiResponse[TaskResponseGet], status_code=status.HTTP_200_OK)
-async def get_task(id, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
-    task_response = await service.get_task_by_id(id)
+@router.get("/{task_id}", response_model=ApiResponse[TaskResponseGet], status_code=status.HTTP_200_OK)
+async def get_task(task_id, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
+    task_response = await service.get_task_by_id(task_id)
     return {"message": "Tarefa encontrada com sucesso", "data": task_response}
 
 #TODO: Adjust return
-@router.patch("/{id}", response_model=ApiResponse, status_code=status.HTTP_200_OK)
-async def update_task(id, task_data: TaskUpdate, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
-    task_response = await service.update_task_by_id(id, task_data)
+@router.patch("/{task_id}", response_model=ApiResponse, status_code=status.HTTP_200_OK)
+async def update_task(task_id, task_data: TaskUpdate, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
+    task_response = await service.update_task_by_id(task_id, task_data, current_user)
     return {"message": "Tarefa atualizada com sucesso"}
 
-#TODO: Create remove tasks
+@router.delete("/{task_id}", response_model=ApiResponse, status_code=status.HTTP_200_OK)
+async def add_member(task_id, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
+    await service.delete_task(task_id, current_user)
+    return {"message": "Tarefa removido com sucesso"}

@@ -10,6 +10,7 @@ class PyObjectId(str):
         return core_schema.str_schema()
 
 class TaskCreate(BaseModel):
+    project_id: str
     title: str
     description: str
 
