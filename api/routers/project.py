@@ -18,7 +18,10 @@ async def get_project(id, service=Depends(get_service(ProjectService)), current_
     project_response = await service.get_project_by_id(id)
     return {"message": "Projeto encontrado com sucesso", "data": project_response}
 
+#TODO: change the logic, instead of puushing more members into the project, insert the list that we will receive
 @router.patch("/{project_id}/members", response_model=ApiResponse, status_code=status.HTTP_200_OK)
 async def add_member(project_id, member: ProjectAddMember, background_tasks: BackgroundTasks, service=Depends(get_service(ProjectService)), notification_service=Depends(get_service(NotificationService)), current_user=Depends(get_current_user)):
     await service.add_member_to_project(project_id, member, notification_service, current_user, background_tasks)
-    return {"message": "Usuário autenticado com sucesso"}
+    return {"message": "Usuário adicionado com sucesso"}
+
+#TODO: Endpoint to delete projects

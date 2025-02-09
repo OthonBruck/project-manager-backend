@@ -21,5 +21,9 @@ class ProjectResponseGet(BaseModel):
 class ProjectResponseCreate(BaseModel):
     title: str
 
+
+class ProjectDictAddMember(BaseModel):
+    user_id: PyObjectId
+    role: str
 class ProjectAddMember(BaseModel):
-    users_id: List[PyObjectId]
+    users_id: List[ProjectDictAddMember]

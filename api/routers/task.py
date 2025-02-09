@@ -17,8 +17,10 @@ async def get_task(id, service=Depends(get_service(TaskService)), current_user=D
     task_response = await service.get_task_by_id(id)
     return {"message": "Tarefa encontrada com sucesso", "data": task_response}
 
-#TODO: Ajustar retorno
+#TODO: Adjust return
 @router.patch("/{id}", response_model=ApiResponse, status_code=status.HTTP_200_OK)
 async def update_task(id, task_data: TaskUpdate, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
     task_response = await service.update_task_by_id(id, task_data)
     return {"message": "Tarefa atualizada com sucesso"}
+
+#TODO: Create remove tasks

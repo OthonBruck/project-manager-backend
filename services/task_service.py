@@ -8,6 +8,9 @@ class TaskService:
     def __init__(self, db):
         self.db = db.get_collection("task")
     
+    #TODO: Link the task with the project
+    #TODO: Add more fields in tasks
+    #TODO: Check permissions if can create the task
     async def create_task(self, task_data: TaskCreate):
         new_task = {
             "title": task_data.title,
@@ -24,25 +27,23 @@ class TaskService:
         if not result:
             raise HTTPException(status_code=400, detail="Task does not exist.")
         return serialize_document(result)
-    
-    #TODO: Find a better way to handle if there is a None in task_data
+
+    #TODO: Check permissions if can update the task
     async def update_task_by_id(self, task_id, task_data):
         task = await self.db.find_one({"_id": ObjectId(task_id)})
         if not task:
             raise HTTPException(status_code=400, detail="Task does not exist.")
-        
-        add_task = {}
-        if task_data.title and task_data.title != None:
-            add_task["title"] = task_data.title
-        if task_data and task_data.description != None:
-            add_task["description"] = task_data.description
-        if task_data and task_data.status!= None:
-            add_task["status"] = task_data.status
+    
+        update_data = {key: value for key, value in {
+            "title": task_data.title,
+            "description": task_data.description,
+            "status": task_data.status
+        }.items() if value is not None}
         
         await self.db.update_one(
                 {"_id": ObjectId(task_id)}, 
                 {
-                    "$set": add_task
+                    "$set": update_data
                 }
             )
         return {}

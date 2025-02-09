@@ -1,7 +1,7 @@
 from schemas.project import ProjectCreate
 from fastapi import HTTPException
 from bson.objectid import ObjectId
-from utils.functions import serialize_document
+from utils.functions import serialize_document, check_permission
 from services.websocket_service import send_notification
 
 class ProjectService:
@@ -24,30 +24,31 @@ class ProjectService:
         if not result:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         return serialize_document(result)
-    
+
     async def add_member_to_project(self, project_id, member, notification_service, current_user, background_tasks):
-        project = await self.db.find_one({"_id": ObjectId(project_id)})
+        members = member.model_dump()
+        project = await check_permission(project_id, ["admin"], current_user, db=self.db)
         if not project:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         
-        new_members = set(member.users_id)
-        old_members = set(project.get("members", []))
+        new_members = {member["user_id"] for member in members.get("users_id", [])}
+        old_members = {member["user_id"] for member in project.get("members", [])}
 
-        duplicates = old_members.intersection(new_members)
+        duplicates = old_members & new_members
         if duplicates:
             raise HTTPException(status_code=400, detail="User is already a member")
         
-        await self.db.update_one({"_id": ObjectId(project_id)}, {"$push": {"members": {"$each": member.users_id}}})
+        await self.db.update_one({"_id": ObjectId(project_id)}, {"$push": {"members": {"$each": members.get("users_id", {})}}})
 
         message = {
             "type": "project-invite",
             "message": f"Você foi adicionado no projeto: {project.get('title')}",
             "project_id": project_id
         }
-        
-        for user_id in member.users_id:
-            background_tasks.add_task(notification_service.create_notification, user_id, f"Você foi adicionado no projeto: {project.get('title')}", message.get('type'))
+        #TODO: after changing the way it insert the new members, we need to change how is sent the notifications
+        for user_id in members.get("users_id", []):	
+            background_tasks.add_task(notification_service.create_notification, user_id.get("user_id"), f"Você foi adicionado no projeto: {project.get('title')}", message.get('type'))
 
-        background_tasks.add_task(send_notification, message, member.users_id)
+        background_tasks.add_task(send_notification, message, members.get('users_id', []))
 
         return {"message": "User added to project"}

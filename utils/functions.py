@@ -1,6 +1,7 @@
-from typing import Type, TypeVar, Callable
-from fastapi import Depends
+from typing import Type, TypeVar, Callable, List
+from fastapi import Depends, HTTPException, status
 from db.database import get_database
+from bson.objectid import ObjectId
 
 T = TypeVar("T")
 
@@ -19,5 +20,23 @@ def get_service(service_class: Type[T]) -> Callable:
     def _get_service(db=Depends(get_database)) -> T:
         return service_class(db)
     return _get_service
+
+async def check_permission(
+    project_id: str,
+    required_roles: List[str],
+    current_user: dict,
+    db
+):
+    project = await db.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=404, detail="Projeto não encontrado")
+    user_role = next(
+        (member["role"] for member in project.get("members", []) if member["user_id"] == current_user),
+        None
+    )
+    if project.get("owner", "") != current_user and (not user_role or user_role not in required_roles):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission not granted")
+
+    return project
 
 #TODO: Create functions to handle current_user
