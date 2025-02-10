@@ -11,6 +11,8 @@ def serialize_document(document: dict) -> dict:
         del document["_id"]
     if document and "created_at" in document:
         document["created_at"] = document["created_at"].isoformat()
+    if document and "updated_at" in document:
+        document["updated_at"] = document["updated_at"].isoformat()
     return document
 
 def serialize_list(documents: list) -> list:
@@ -38,5 +40,3 @@ async def check_permission(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission not granted")
 
     return project
-
-#TODO: Create functions to handle current_user

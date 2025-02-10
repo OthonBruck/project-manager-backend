@@ -1,7 +1,7 @@
 from schemas.project import ProjectCreate
 from fastapi import HTTPException
 from bson.objectid import ObjectId
-from utils.functions import serialize_document, check_permission
+from utils.functions import serialize_document, check_permission, serialize_list
 from services.websocket_service import send_notification
 
 class ProjectService:
@@ -25,6 +25,39 @@ class ProjectService:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         return serialize_document(result)
 
+    async def get_project_visible_by_user(self, current_user):
+        result = await self.db.find({
+            "$or": [
+                {"owner": current_user},
+                {"members.user_id": current_user}
+            ]
+        }).to_list()
+        if not result:
+            raise HTTPException(status_code=400, detail="No projects to display.")
+        return serialize_list(result)
+    
+    async def update_project_by_id(self, project_id, project_data, current_user):
+        project = await self.db.find_one({"_id": ObjectId(project_id)})
+        if not project:
+            raise HTTPException(status_code=400, detail="Project does not exist.")
+        
+        project = await check_permission(str(project.get("_id")), ["admin", "editor"], current_user)
+
+        update_data = project_data.model_dump(exclude_none=True)
+
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No valid fields to update.")
+
+        result = await self.db.update_one(
+            {"_id": ObjectId(project_id)},
+            {"$set": update_data}
+        )
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="No changes were made.")
+
+        updated_project = await self.db.find_one({"_id": ObjectId(project_id)})
+        return updated_project
+
     async def add_member_to_project(self, project_id, member, notification_service, current_user, background_tasks):
         members = member.model_dump()
         project = await check_permission(project_id, ["admin"], current_user, db=self.db)
@@ -45,7 +78,7 @@ class ProjectService:
             "message": f"Você foi adicionado no projeto: {project.get('title')}",
             "project_id": project_id
         }
-        #TODO: after changing the way it insert the new members, we need to change how is sent the notifications
+
         for user_id in members.get("users_id", []):	
             background_tasks.add_task(notification_service.create_notification, user_id.get("user_id"), f"Você foi adicionado no projeto: {project.get('title')}", message.get('type'))
 

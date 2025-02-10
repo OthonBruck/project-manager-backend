@@ -4,6 +4,7 @@ from schemas.api_response import ApiResponse
 from services.task_service import TaskService
 from utils.security import get_current_user
 from utils.functions import get_service
+from typing import List
 
 router = APIRouter()
 
@@ -17,10 +18,14 @@ async def get_task(task_id, service=Depends(get_service(TaskService)), current_u
     task_response = await service.get_task_by_id(task_id)
     return {"message": "Tarefa encontrada com sucesso", "data": task_response}
 
-#TODO: Adjust return
+@router.get("/{project_id}/tasks", response_model=ApiResponse[List[TaskResponseGet]], status_code=status.HTTP_200_OK)
+async def get_projects_tasks(service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
+    task_response = await service.get_tasks_by_project(current_user)
+    return {"message": "Tarefas encontradas com sucesso", "data": task_response}
+
 @router.patch("/{task_id}", response_model=ApiResponse, status_code=status.HTTP_200_OK)
 async def update_task(task_id, task_data: TaskUpdate, service=Depends(get_service(TaskService)), current_user=Depends(get_current_user)):
-    task_response = await service.update_task_by_id(task_id, task_data, current_user)
+    await service.update_task_by_id(task_id, task_data, current_user)
     return {"message": "Tarefa atualizada com sucesso"}
 
 @router.delete("/{task_id}", response_model=ApiResponse, status_code=status.HTTP_200_OK)
