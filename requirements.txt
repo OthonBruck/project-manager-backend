@@ -3,3 +3,5 @@ python-decouple
 motor
 passlib[bcrypt]
 python-jose[cryptography]
+pytest-asyncio
+pytest

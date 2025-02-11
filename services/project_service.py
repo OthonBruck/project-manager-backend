@@ -6,27 +6,31 @@ from services.websocket_service import send_notification
 
 class ProjectService:
     def __init__(self, db):
-        self.db = db.get_collection("project")
-    
+        self.db = db
+
     async def create_project(self, project_data: ProjectCreate, current_user):
+        collection = await self.db.get_collection("project")
         new_project = {
             "title": project_data.title,
             "description": project_data.description,
             "owner": current_user,
             "members": []
         }
-        await self.db.insert_one(new_project)
+
+        result = await collection.insert_one(new_project)
 
         return new_project
 
     async def get_project_by_id(self, id):
-        result = await self.db.find_one({"_id": ObjectId(id)})
+        collection = await self.db.get_collection("project")
+        result = await collection.find_one({"_id": ObjectId(id)})
         if not result:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         return serialize_document(result)
 
     async def get_project_visible_by_user(self, current_user):
-        result = await self.db.find({
+        collection = await self.db.get_collection("project")
+        result = await collection.find({
             "$or": [
                 {"owner": current_user},
                 {"members.user_id": current_user}
@@ -37,7 +41,8 @@ class ProjectService:
         return serialize_list(result)
     
     async def update_project_by_id(self, project_id, project_data, current_user):
-        project = await self.db.find_one({"_id": ObjectId(project_id)})
+        collection = await self.db.get_collection("project")
+        project = await collection.find_one({"_id": ObjectId(project_id)})
         if not project:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         
@@ -48,19 +53,20 @@ class ProjectService:
         if not update_data:
             raise HTTPException(status_code=400, detail="No valid fields to update.")
 
-        result = await self.db.update_one(
+        result = await collection.update_one(
             {"_id": ObjectId(project_id)},
             {"$set": update_data}
         )
         if result.modified_count == 0:
             raise HTTPException(status_code=400, detail="No changes were made.")
 
-        updated_project = await self.db.find_one({"_id": ObjectId(project_id)})
+        updated_project = await collection.find_one({"_id": ObjectId(project_id)})
         return updated_project
 
     async def add_member_to_project(self, project_id, member, notification_service, current_user, background_tasks):
+        collection = await self.db.get_collection("project")
         members = member.model_dump()
-        project = await check_permission(project_id, ["admin"], current_user, db=self.db)
+        project = await check_permission(project_id, ["admin"], current_user)
         if not project:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         
@@ -71,7 +77,7 @@ class ProjectService:
         if duplicates:
             raise HTTPException(status_code=400, detail="User is already a member")
         
-        await self.db.update_one({"_id": ObjectId(project_id)}, {"$push": {"members": {"$each": members.get("users_id", {})}}})
+        await collection.update_one({"_id": ObjectId(project_id)}, {"$push": {"members": {"$each": members.get("users_id", {})}}})
 
         message = {
             "type": "project-invite",
@@ -87,9 +93,10 @@ class ProjectService:
         return {"message": "User added to project"}
     
     async def delete_project(self, project_id, current_user):
-        project = await check_permission(project_id, ["admin"], current_user, db=self.db)
+        collection = await collection.get_collection("project")
+        project = await check_permission(project_id, ["admin"], current_user)
         if not project:
             raise HTTPException(status_code=400, detail="Project does not exist.")
         
-        await self.db.delete_one({"_id": ObjectId(project_id)})
+        await collection.delete_one({"_id": ObjectId(project_id)})
         return True
