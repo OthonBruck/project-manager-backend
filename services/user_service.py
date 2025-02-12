@@ -6,7 +6,9 @@ from utils.functions import serialize_document
 from decouple import config
 from datetime import datetime, timedelta, timezone
 from jose import jwt
+from repository.user_repository import UserRepository
 
+#TODO: Move to utils.security
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """Gera um token JWT"""
     to_encode = data.copy()
@@ -15,11 +17,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return jwt.encode(to_encode, config("SECRET_KEY"), algorithm=config("ALGORITHM"))
 
 class UserService:
-    def __init__(self, db):
-        self.db = db.get_collection("user")
+    def __init__(self, repository: UserRepository):
+        self.repository = repository
     
     async def create_user(self, user_data: UserCreate):
-        collection = await self.db.get_collection("user")
         hashed_password = get_password_hash(user_data.password)
         new_user = {
             "name": user_data.name,
@@ -27,24 +28,22 @@ class UserService:
             "hashed_password": hashed_password,
         }
 
-        existing_user = await collection.find_one({"email": user_data.email})
+        existing_user = await self.repository.find_by_email(user_data.email)
         if existing_user:
             raise HTTPException(status_code=400, detail="Email is already in use.")
         
-        await collection.insert_one(new_user)
+        await self.repository.create(new_user)
 
         return new_user
 
     async def get_user_by_id(self, id):
-        collection = await self.db.get_collection("user")
-        result = await collection.find_one({"_id": ObjectId(id)})
+        result = await self.repository.find_user_by_id(id)
         if not result:
             raise HTTPException(status_code=400, detail="User does not exist.")
         return serialize_document(result)
     
     async def authenticate_user(self, userLogin: UserLogin):
-        collection = await self.db.get_collection("user")
-        user = await collection.find_one({"email": userLogin.email})
+        user = await self.repository.find_by_email(userLogin.email)
         if not user or not verify_password(userLogin.password, user.get("hashed_password")):
             raise HTTPException(status_code=401, detail="Invalid credentials.")
         

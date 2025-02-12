@@ -18,10 +18,6 @@ def serialize_document(document: dict) -> dict:
 def serialize_list(documents: list) -> list:
     return [serialize_document(doc) for doc in documents]
 
-def get_service(service_class: Type[T]) -> Callable:
-    def _get_service(db=Depends(get_database)) -> T:
-        return service_class(db)
-    return _get_service
 
 async def check_permission(
     project_id: str,
