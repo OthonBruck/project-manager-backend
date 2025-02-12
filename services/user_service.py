@@ -19,7 +19,7 @@ class UserService:
         self.db = db.get_collection("user")
     
     async def create_user(self, user_data: UserCreate):
-
+        collection = await self.db.get_collection("user")
         hashed_password = get_password_hash(user_data.password)
         new_user = {
             "name": user_data.name,
@@ -27,22 +27,24 @@ class UserService:
             "hashed_password": hashed_password,
         }
 
-        existing_user = await self.db.find_one({"email": user_data.email})
+        existing_user = await collection.find_one({"email": user_data.email})
         if existing_user:
             raise HTTPException(status_code=400, detail="Email is already in use.")
         
-        await self.db.insert_one(new_user)
+        await collection.insert_one(new_user)
 
         return new_user
 
     async def get_user_by_id(self, id):
-        result = await self.db.find_one({"_id": ObjectId(id)})
+        collection = await self.db.get_collection("user")
+        result = await collection.find_one({"_id": ObjectId(id)})
         if not result:
             raise HTTPException(status_code=400, detail="User does not exist.")
         return serialize_document(result)
     
     async def authenticate_user(self, userLogin: UserLogin):
-        user = await self.db.find_one({"email": userLogin.email})
+        collection = await self.db.get_collection("user")
+        user = await collection.find_one({"email": userLogin.email})
         if not user or not verify_password(userLogin.password, user.get("hashed_password")):
             raise HTTPException(status_code=401, detail="Invalid credentials.")
         
