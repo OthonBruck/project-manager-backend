@@ -17,7 +17,6 @@ class ProjectService:
             "members": []
         }
         result = await self.repository.create(new_project)
-
         return result
 
     async def get_project_by_id(self, id):
@@ -27,7 +26,7 @@ class ProjectService:
         return serialize_document(result)
 
     async def get_project_visible_by_user(self, current_user):
-        result = await self.repository.find_projects_by_user(current_user, self.db)
+        result = await self.repository.find_projects_by_user(current_user)
         if not result:
             raise HTTPException(status_code=400, detail="No projects to display.")
         return serialize_list(result)

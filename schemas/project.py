@@ -1,6 +1,6 @@
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import core_schema
-from typing import List
+from typing import List, Optional
 
 class PyObjectId(str):
     @classmethod
@@ -10,8 +10,8 @@ class PyObjectId(str):
         return core_schema.str_schema()
 
 class ProjectCreate(BaseModel):
-    title: str
-    description: str
+    title: str | None = None
+    description: str | None = None
 
 class ProjectResponseGet(BaseModel):
     id: PyObjectId
