@@ -7,12 +7,17 @@ from utils.security import get_current_user
 from typing import List
 from db.database import get_database
 from repository.project_repository import ProjectRepository
+from repository.notification_repository import NotificationRepository
 
 router = APIRouter()
 
 def get_service(db = Depends(get_database)):
     repository = ProjectRepository(db)
     return ProjectService(repository)
+
+def get_service_notification(db = Depends(get_database)):
+    repository = NotificationRepository(db)
+    return NotificationRepository(repository)
 
 @router.post("/", response_model=ApiResponse[ProjectResponseCreate], status_code=status.HTTP_201_CREATED)
 async def register_project(project: ProjectCreate, service=Depends(get_service), current_user=Depends(get_current_user)):
@@ -35,7 +40,7 @@ async def update_task(project_id, project_data: ProjectUpdate, service=Depends(g
     return {"message": "Projeto atualizada com sucesso"}
 
 @router.patch("/{project_id}/members", response_model=ApiResponse, status_code=status.HTTP_200_OK)
-async def add_member(project_id, member: ProjectAddMember, background_tasks: BackgroundTasks, service=Depends(get_service), notification_service=Depends(get_service(NotificationService)), current_user=Depends(get_current_user)):
+async def add_member(project_id, member: ProjectAddMember, background_tasks: BackgroundTasks, service=Depends(get_service), notification_service=Depends(get_service_notification), current_user=Depends(get_current_user)):
     await service.add_member_to_project(project_id, member, notification_service, current_user, background_tasks)
     return {"message": "Membro adicionado com sucesso"}
 
