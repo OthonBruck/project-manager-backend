@@ -12,7 +12,7 @@ def get_service(db = Depends(get_database)):
     repository = UserRepository(db)
     return UserService(repository)
 
-@router.post("/", response_model=ApiResponse[UserResponseCreate], status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ApiResponse[UserResponseCreate], status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate, service=Depends(get_service)):
     user_response = await service.create_user(user)
     return {"message": "Usuário criado com sucesso", "data": user_response}

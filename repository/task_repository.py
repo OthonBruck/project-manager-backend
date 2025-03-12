@@ -13,8 +13,8 @@ class TaskRepository:
         return task
 
     async def find_by_project_id(self, project_id: str):
-        task = await self.collection.find({"project_id": ObjectId(project_id)})
-        return task.to_list()
+        task = self.collection.find({"project_id": ObjectId(project_id)})
+        return await task.to_list()
     
     async def update_by_id(self, task_id: str, update_data: dict):
         result = self.collection.update_one(

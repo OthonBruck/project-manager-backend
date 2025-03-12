@@ -19,7 +19,7 @@ def get_service_notification(db = Depends(get_database)):
     repository = NotificationRepository(db)
     return NotificationRepository(repository)
 
-@router.post("/", response_model=ApiResponse[ProjectResponseCreate], status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ApiResponse[ProjectResponseCreate], status_code=status.HTTP_201_CREATED)
 async def register_project(project: ProjectCreate, service=Depends(get_service), current_user=Depends(get_current_user)):
     project_response = await service.create_project(project, current_user)
     return {"message": "Projeto criado com sucesso", "data": project_response}
@@ -29,7 +29,7 @@ async def get_project(id, service=Depends(get_service), current_user=Depends(get
     project_response = await service.get_project_by_id(id)
     return {"message": "Projeto encontrado com sucesso", "data": project_response}
 
-@router.get("/", response_model=ApiResponse[List[ProjectResponseGet]], status_code=status.HTTP_200_OK)
+@router.get("", response_model=ApiResponse[List[ProjectResponseGet]], status_code=status.HTTP_200_OK)
 async def get_visible_projects(service=Depends(get_service), current_user=Depends(get_current_user)):
     project_response = await service.get_project_visible_by_user(current_user)
     return {"message": "Projetos encontrados com sucesso", "data": project_response}
