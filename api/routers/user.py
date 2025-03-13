@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Response
 from schemas.user import UserCreate, UserResponseCreate, UserResponseGet, UserLogin, UserResponseLogin
 from schemas.api_response import ApiResponse
 from services.user_service import UserService
@@ -23,6 +23,7 @@ async def get_user(id, service=Depends(get_service), current_user=Depends(get_cu
     return {"message": "Usuário encontrado com sucesso", "data": user_response}
 
 @router.post("/login", response_model=ApiResponse[UserResponseLogin], status_code=status.HTTP_200_OK)
-async def login(user: UserLogin, service=Depends(get_service)):
+async def login(user: UserLogin, response: Response,service=Depends(get_service)):
     token = await service.authenticate_user(user)
+    response.set_cookie(key="token", value=token.get("token"), httponly=True, secure=True, samesite="Lax")
     return {"message": "Usuário autenticado com sucesso", "data": token}
